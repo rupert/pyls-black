@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from pyls.workspace import Document
 
-from pyls_black.plugin import load_config, pyls_format_document, pyls_format_range
+from pyls_black.plugin import pyls_format_document, pyls_format_range
 
 here = Path(__file__).parent
 fixtures_dir = here / "fixtures"
@@ -122,27 +122,3 @@ def test_pyls_format_range_syntax_error(invalid_document):
     result = pyls_format_range(invalid_document, range=range)
 
     assert result == []
-
-
-def test_load_config():
-    config = load_config(fixtures_dir / "config" / "example.py")
-
-    assert config == {
-        "line_length": 20,
-        "py36": True,
-        "pyi": True,
-        "fast": True,
-        "skip_string_normalization": True,
-    }
-
-
-def test_load_config_defaults():
-    config = load_config(fixtures_dir / "example.py")
-
-    assert config == {
-        "line_length": 88,
-        "py36": False,
-        "pyi": False,
-        "fast": False,
-        "skip_string_normalization": False,
-    }

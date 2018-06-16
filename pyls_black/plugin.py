@@ -1,8 +1,14 @@
-from typing import Dict
+import logging
+import subprocess
+from pathlib import Path
 
-import black
-import toml
 from pyls import hookimpl
+
+logger = logging.getLogger(__name__)
+
+
+class BlackError(Exception):
+    pass
 
 
 @hookimpl
@@ -30,53 +36,30 @@ def format_document(document, range=None):
             "end": {"line": len(document.lines), "character": 0},
         }
 
-    config = load_config(document.path)
-
     try:
-        formatted_text = format_text(text=text, config=config)
-    except (ValueError, black.NothingChanged):
+        formatted_text = format_text(text=text, path=document.path)
+    except BlackError:
+        logger.exception("Error running black")
+        return []
+
+    if text == formatted_text:
         return []
 
     return [{"range": range, "newText": formatted_text}]
 
 
-def format_text(*, text, config):
-    line_length = config["line_length"]
-    fast = config["fast"]
-    mode = black.FileMode.from_configuration(
-        py36=config["py36"],
-        pyi=config["pyi"],
-        skip_string_normalization=config["skip_string_normalization"],
+def format_text(*, text, path):
+    cwd = Path(path).parent
+    p = subprocess.Popen(
+        ["python3", "-m", "black", "-"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        cwd=cwd,
     )
-    return black.format_file_contents(
-        text, line_length=line_length, fast=fast, mode=mode
-    )
+    stdout, stderr = p.communicate(text.encode("utf-8"))
 
+    if p.returncode != 0:
+        raise BlackError(stderr.decode().strip())
 
-def load_config(filename: str) -> Dict:
-    defaults = {
-        "line_length": 88,
-        "fast": False,
-        "py36": False,
-        "pyi": False,
-        "skip_string_normalization": False,
-    }
-
-    root = black.find_project_root((filename,))
-
-    pyproject_filename = root / "pyproject.toml"
-
-    if not pyproject_filename.is_file():
-        return defaults
-
-    try:
-        pyproject_toml = toml.load(str(pyproject_filename))
-    except (toml.TomlDecodeError, OSError) as e:
-        return defaults
-
-    config = pyproject_toml.get("tool", {}).get("black", {})
-    config = {
-        key.replace("--", "").replace("-", "_"): value for key, value in config.items()
-    }
-
-    return {**defaults, **config}
+    return stdout.decode("utf-8")

@@ -1,5 +1,7 @@
 lint: flake8 black-check isort-check mypy
 
+fmt: black isort
+
 flake8:
 	flake8 .
 
