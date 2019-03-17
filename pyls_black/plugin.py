@@ -50,29 +50,26 @@ def format_document(document, range=None):
 
 
 def format_text(*, text, config):
-    line_length = config["line_length"]
     fast = config["fast"]
-    mode = black.FileMode.from_configuration(
-        py36=config["py36"],
-        pyi=config["pyi"],
-        skip_string_normalization=config["skip_string_normalization"],
-        skip_numeric_underscore_normalization=config[
-            "skip_numeric_underscore_normalization"
-        ],
+    mode = black.FileMode(
+        target_versions=black.PY36_VERSIONS
+        if config["py36"]
+        else set(config["target_versions"]),
+        line_length=config["line_length"],
+        is_pyi=config["is_pyi"],
+        string_normalization=config["string_normalization"],
     )
-    return black.format_file_contents(
-        text, line_length=line_length, fast=fast, mode=mode
-    )
+    return black.format_file_contents(text, fast=fast, mode=mode)
 
 
 def load_config(filename: str) -> Dict:
     defaults = {
         "line_length": 88,
         "fast": False,
+        "target_versions": [],
         "py36": False,
-        "pyi": filename.endswith(".pyi"),
-        "skip_string_normalization": False,
-        "skip_numeric_underscore_normalization": False,
+        "is_pyi": filename.endswith(".pyi"),
+        "string_normalization": False,
     }
 
     root = black.find_project_root((filename,))
