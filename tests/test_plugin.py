@@ -167,7 +167,6 @@ def test_load_config():
         "pyi": True,
         "fast": True,
         "skip_string_normalization": True,
-        "skip_numeric_underscore_normalization": True,
     }
 
 
@@ -180,5 +179,4 @@ def test_load_config_defaults():
         "pyi": False,
         "fast": False,
         "skip_string_normalization": False,
-        "skip_numeric_underscore_normalization": False,
     }
