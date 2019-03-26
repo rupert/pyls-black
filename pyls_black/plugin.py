@@ -82,21 +82,24 @@ def load_config(filename: str) -> Dict:
 
     file_config = pyproject_toml.get("tool", {}).get("black", {})
     file_config = {
-        key.replace("--", "").replace("-", "_"): value for key, value in file_config.items()
+        key.replace("--", "").replace("-", "_"): value
+        for key, value in file_config.items()
     }
 
     config = {
-        key: file_config.get(key, default_value) 
+        key: file_config.get(key, default_value)
         for key, default_value in defaults.items()
     }
 
     if file_config.get("target_version"):
-        target_version = set(black.TargetVersion[x.upper()] for x in file_config["target_version"])
+        target_version = set(
+            black.TargetVersion[x.upper()] for x in file_config["target_version"]
+        )
     elif file_config.get("py36"):
         target_version = black.PY36_VERSIONS
     else:
         target_version = set()
 
     config["target_version"] = target_version
-    
+
     return config
