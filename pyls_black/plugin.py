@@ -50,26 +50,22 @@ def format_document(document, range=None):
 
 
 def format_text(*, text, config):
-    fast = config["fast"]
     mode = black.FileMode(
-        target_versions=black.PY36_VERSIONS
-        if config["py36"]
-        else set(config["target_versions"]),
+        target_versions=config["target_version"],
         line_length=config["line_length"],
-        is_pyi=config["is_pyi"],
-        string_normalization=config["string_normalization"],
+        is_pyi=config["pyi"],
+        string_normalization=not config["skip_string_normalization"],
     )
-    return black.format_file_contents(text, fast=fast, mode=mode)
+
+    return black.format_file_contents(text, fast=config["fast"], mode=mode)
 
 
 def load_config(filename: str) -> Dict:
     defaults = {
         "line_length": 88,
         "fast": False,
-        "target_versions": [],
-        "py36": False,
-        "is_pyi": filename.endswith(".pyi"),
-        "string_normalization": False,
+        "pyi": filename.endswith(".pyi"),
+        "skip_string_normalization": False,
     }
 
     root = black.find_project_root((filename,))
@@ -84,9 +80,23 @@ def load_config(filename: str) -> Dict:
     except (toml.TomlDecodeError, OSError):
         return defaults
 
-    config = pyproject_toml.get("tool", {}).get("black", {})
-    config = {
-        key.replace("--", "").replace("-", "_"): value for key, value in config.items()
+    file_config = pyproject_toml.get("tool", {}).get("black", {})
+    file_config = {
+        key.replace("--", "").replace("-", "_"): value for key, value in file_config.items()
     }
 
-    return {**defaults, **config}
+    config = {
+        key: file_config.get(key, default_value) 
+        for key, default_value in defaults.items()
+    }
+
+    if file_config.get("target_version"):
+        target_version = set(black.TargetVersion[x.upper()] for x in file_config["target_version"])
+    elif file_config.get("py36"):
+        target_version = black.PY36_VERSIONS
+    else:
+        target_version = set()
+
+    config["target_version"] = target_version
+    
+    return config
