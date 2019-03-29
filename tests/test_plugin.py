@@ -194,3 +194,16 @@ def test_load_config_defaults():
         "fast": False,
         "skip_string_normalization": False,
     }
+
+
+def test_load_config_defaults_no_config_file():
+    # this test assumes that there's no /pyproject.toml file
+    config = load_config("/")
+
+    assert config == {
+        "line_length": 88,
+        "target_version": set(),
+        "pyi": False,
+        "fast": False,
+        "skip_string_normalization": False,
+    }
