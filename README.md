@@ -1,3 +1,5 @@
+Use [python-lsp-black](https://github.com/python-lsp/python-lsp-black) instead.
+
 # pyls-black
 
 [![PyPI](https://img.shields.io/pypi/v/pyls-black.svg)](https://pypi.org/project/pyls-black/) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
