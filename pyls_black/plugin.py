@@ -73,7 +73,13 @@ def load_config(filename: str) -> Dict:
 
     root = black.find_project_root((filename,))
 
-    pyproject_filename = root / "pyproject.toml"
+    # Note: find_project_root returns a tuple in 22.1.0+
+    try:
+        # Keeping this to not break backward compatibility.
+        pyproject_filename = root / "pyproject.toml"
+    except TypeError:
+        _root, _ = root
+        pyproject_filename = _root / "pyproject.toml"
 
     if not pyproject_filename.is_file():
         return defaults
